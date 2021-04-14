@@ -7,6 +7,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -35,6 +36,7 @@ public class HttpService {
     public HttpService() {
         HttpClients.createDefault();
     }
+
     /***
      * 获取秒杀资格
      * @param seckillId 疫苗ID
@@ -128,7 +130,11 @@ public class HttpService {
         }
         get.setHeaders(headers.toArray(new Header[0]));
         CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpEntity httpEntity = httpClient.execute(get).getEntity();
+        CloseableHttpResponse response = httpClient.execute(get);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            throw new BusinessException("", "http response:" + response.getStatusLine().getStatusCode());
+        }
+        HttpEntity httpEntity = response.getEntity();
         String json = EntityUtils.toString(httpEntity, StandardCharsets.UTF_8);
         JSONObject jsonObject = JSONObject.parseObject(json);
         if ("0000".equals(jsonObject.get("code"))) {
